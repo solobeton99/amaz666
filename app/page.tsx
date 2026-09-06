@@ -5,12 +5,16 @@ import Link from "next/link";
 import LocationTab from "@/components/LocationTab";
 import NumberTab from "@/components/NumberTab";
 import { useLocationStore } from "@/lib/useLocationStore";
+import { useLanguage } from "@/lib/language";
+import { translations } from "@/lib/i18n";
 
 type Tab = "location" | "number";
 
 export default function HomePage() {
   const [tab, setTab] = useState<Tab>("location");
   const { locations, ready } = useLocationStore();
+  const { lang, setLang } = useLanguage();
+  const t = translations[lang];
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-navy-950 text-white">
@@ -22,18 +26,41 @@ export default function HomePage() {
         }}
       />
 
+      <div className="absolute right-4 top-4 z-10 flex overflow-hidden rounded-full border border-white/15 bg-navy-900/60 text-xs font-semibold backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setLang("fr")}
+          aria-pressed={lang === "fr"}
+          className={`px-3 py-1.5 transition ${
+            lang === "fr" ? "bg-brand-600 text-white" : "text-blue-100/60 hover:text-white"
+          }`}
+        >
+          FR
+        </button>
+        <button
+          type="button"
+          onClick={() => setLang("en")}
+          aria-pressed={lang === "en"}
+          className={`px-3 py-1.5 transition ${
+            lang === "en" ? "bg-brand-600 text-white" : "text-blue-100/60 hover:text-white"
+          }`}
+        >
+          EN
+        </button>
+      </div>
+
       <div className="relative mx-auto max-w-3xl px-4 py-14">
         <header className="mb-10 text-center">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-2xl shadow-lg shadow-brand-900/40">
             📷
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white">QR Code Manager</h1>
-          <p className="mt-2 text-blue-100/70">Generate QR codes for locations and numbers</p>
+          <h1 className="text-4xl font-bold tracking-tight text-white">{t.appTitle}</h1>
+          <p className="mt-2 text-blue-100/70">{t.appSubtitle}</p>
           <Link
             href="/admin"
             className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand-400 transition hover:text-brand-300"
           >
-            Admin: manage locations <span aria-hidden>→</span>
+            {t.adminLink} <span aria-hidden>→</span>
           </Link>
         </header>
 
@@ -46,7 +73,7 @@ export default function HomePage() {
                 : "text-blue-100/70 hover:bg-white/5 hover:text-white"
             }`}
           >
-            📍 Location QR Code
+            📍 {t.tabLocation}
           </button>
           <button
             onClick={() => setTab("number")}
@@ -56,12 +83,12 @@ export default function HomePage() {
                 : "text-blue-100/70 hover:bg-white/5 hover:text-white"
             }`}
           >
-            🔢 Number QR Generator
+            🔢 {t.tabNumber}
           </button>
         </div>
 
         {!ready ? (
-          <p className="text-center text-sm text-blue-100/50">Loading…</p>
+          <p className="text-center text-sm text-blue-100/50">{t.loading}</p>
         ) : tab === "location" ? (
           <LocationTab locations={locations} />
         ) : (

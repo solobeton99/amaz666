@@ -2,3 +2,5 @@ node_modules
 .next
 .vercel
 *.log
+.claude/launch.json
+tsconfig.tsbuildinfo

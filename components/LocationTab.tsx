@@ -3,12 +3,17 @@
 import { useMemo, useRef, useState } from "react";
 import { LocationMap, findLocation, searchLocations } from "@/lib/locations";
 import QRDisplay from "./QRDisplay";
+import { useLanguage } from "@/lib/language";
+import { translations } from "@/lib/i18n";
+import { normalizeSpokenLocation, useSpeechRecognition } from "@/lib/voice";
 
 interface LocationTabProps {
   locations: LocationMap;
 }
 
 export default function LocationTab({ locations }: LocationTabProps) {
+  const { lang } = useLanguage();
+  const t = translations[lang];
   const [query, setQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selected, setSelected] = useState<{ key: string; value: string } | null>(null);
@@ -23,12 +28,12 @@ export default function LocationTab({ locations }: LocationTabProps) {
     setQuery(key);
     if (!found) {
       setSelected(null);
-      setMessage("Location not found.");
+      setMessage(t.errorNotFound);
       return;
     }
     if (!found.value) {
       setSelected(null);
-      setMessage("No QR code has been assigned to this location yet.");
+      setMessage(t.errorNoQr);
       return;
     }
     setMessage(null);
@@ -48,13 +53,29 @@ export default function LocationTab({ locations }: LocationTabProps) {
     inputRef.current?.focus();
   };
 
+  const { listening, supported, start, stop } = useSpeechRecognition(
+    lang === "fr" ? "fr-FR" : "en-US",
+    (transcript) => {
+      const cleaned = normalizeSpokenLocation(transcript);
+      if (!cleaned) return;
+      setShowDropdown(true);
+      selectLocation(cleaned);
+    }
+  );
+
+  const toggleListening = () => {
+    setMessage(null);
+    if (listening) stop();
+    else start();
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-xl shadow-black/20 backdrop-blur">
         <div className="mb-2 flex items-center justify-between">
-          <label className="block text-sm font-medium text-blue-100/80">Enter or select a location</label>
+          <label className="block text-sm font-medium text-blue-100/80">{t.locationLabel}</label>
           <span className="rounded-full bg-brand-500/15 px-2.5 py-0.5 text-xs font-medium text-brand-300">
-            {Object.keys(locations).length.toLocaleString()} locations
+            {t.locationsCount(Object.keys(locations).length.toLocaleString())}
           </span>
         </div>
         <div className="relative">
@@ -74,9 +95,34 @@ export default function LocationTab({ locations }: LocationTabProps) {
               if (e.key === "Enter") handleGenerate();
               if (e.key === "Escape") setShowDropdown(false);
             }}
-            placeholder="e.g. A3-1A"
-            className="w-full rounded-xl border border-white/15 bg-navy-900 px-4 py-3 pr-11 text-sm text-white placeholder-blue-100/30 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/40"
+            placeholder={t.locationPlaceholder}
+            className="w-full rounded-xl border border-white/15 bg-navy-900 px-4 py-3 pr-20 text-sm text-white placeholder-blue-100/30 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/40"
           />
+
+          {supported && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={toggleListening}
+              title={listening ? t.micTitleStop : t.micTitleStart}
+              aria-label={listening ? t.micTitleStop : t.micTitleStart}
+              aria-pressed={listening}
+              className={`absolute right-9 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full transition ${
+                listening ? "bg-red-500/20 text-red-400" : "text-blue-100/40 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z"
+                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-14 0M12 18v3" />
+              </svg>
+              {listening && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-red-500" />}
+            </button>
+          )}
+
           <svg
             className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-100/40"
             fill="none"
@@ -109,11 +155,13 @@ export default function LocationTab({ locations }: LocationTabProps) {
           )}
         </div>
 
+        {listening && <p className="mt-2 text-xs font-medium text-red-300">{t.micListening}</p>}
+
         <button
           onClick={handleGenerate}
           className="mt-4 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-900/40 transition hover:bg-brand-500"
         >
-          Generate QR Code
+          {t.generate}
         </button>
       </div>
 

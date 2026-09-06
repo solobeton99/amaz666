@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { downloadDataURL, generateQRDataURL, printQRCode, sanitizeFilename } from "@/lib/qr";
+import { useLanguage } from "@/lib/language";
+import { translations } from "@/lib/i18n";
 
 interface QRDisplayProps {
   value: string;
@@ -10,6 +12,8 @@ interface QRDisplayProps {
 }
 
 export default function QRDisplay({ value, title, onReset }: QRDisplayProps) {
+  const { lang } = useLanguage();
+  const t = translations[lang];
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,12 +27,12 @@ export default function QRDisplay({ value, title, onReset }: QRDisplayProps) {
         if (!cancelled) setDataUrl(url);
       })
       .catch(() => {
-        if (!cancelled) setError("Could not generate QR code for this value.");
+        if (!cancelled) setError(t.couldNotGenerate);
       });
     return () => {
       cancelled = true;
     };
-  }, [value]);
+  }, [value, t.couldNotGenerate]);
 
   const handleDownload = () => {
     if (!dataUrl) return;
@@ -46,7 +50,7 @@ export default function QRDisplay({ value, title, onReset }: QRDisplayProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      setError("Could not copy to clipboard.");
+      setError(t.couldNotCopy);
     }
   };
 
@@ -74,26 +78,26 @@ export default function QRDisplay({ value, title, onReset }: QRDisplayProps) {
           disabled={!dataUrl}
           className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white shadow-md shadow-brand-900/30 transition hover:bg-brand-500 disabled:opacity-50"
         >
-          Download
+          {t.download}
         </button>
         <button
           onClick={handlePrint}
           disabled={!dataUrl}
           className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
         >
-          Print
+          {t.print}
         </button>
         <button
           onClick={handleCopy}
           className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
         >
-          {copied ? "Copied!" : "Copy value"}
+          {copied ? t.copied : t.copy}
         </button>
         <button
           onClick={onReset}
           className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
         >
-          Reset
+          {t.reset}
         </button>
       </div>
     </div>

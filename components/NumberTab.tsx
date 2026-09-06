@@ -2,8 +2,12 @@
 
 import { useRef, useState } from "react";
 import QRDisplay from "./QRDisplay";
+import { useLanguage } from "@/lib/language";
+import { translations } from "@/lib/i18n";
 
 export default function NumberTab() {
+  const { lang } = useLanguage();
+  const t = translations[lang];
   const [input, setInput] = useState("");
   const [committed, setCommitted] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -24,7 +28,7 @@ export default function NumberTab() {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-6">
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-xl shadow-black/20 backdrop-blur">
-        <label className="mb-2 block text-sm font-medium text-blue-100/80">Enter a number or value</label>
+        <label className="mb-2 block text-sm font-medium text-blue-100/80">{t.numberLabel}</label>
         <input
           ref={inputRef}
           type="text"
@@ -37,17 +41,17 @@ export default function NumberTab() {
           onKeyDown={(e) => {
             if (e.key === "Enter") handleGenerate();
           }}
-          placeholder="e.g. 001234"
+          placeholder={t.numberPlaceholder}
           className="w-full rounded-xl border border-white/15 bg-navy-900 px-4 py-3 text-sm text-white placeholder-blue-100/30 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/40"
         />
-        <p className="mt-2 text-xs text-blue-100/50">Entered exactly as typed — leading zeros are preserved.</p>
+        <p className="mt-2 text-xs text-blue-100/50">{t.numberHint}</p>
 
         <button
           onClick={handleGenerate}
           disabled={!input}
           className="mt-4 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-900/40 transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Generate QR Code
+          {t.generate}
         </button>
       </div>
 
